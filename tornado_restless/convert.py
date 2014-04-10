@@ -19,7 +19,7 @@ __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '23.05.13 - 17:41'
 
 __datetypes__ = (datetime, time, date)
-__basetypes__ = (str, int, bool, float)
+__basetypes__ = (basestring, int, bool, float)
 
 
 def to_filter(instance,
