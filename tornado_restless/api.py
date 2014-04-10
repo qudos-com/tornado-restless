@@ -27,8 +27,8 @@ class ApiManager(object):
     METHODS_ALL = METHODS_READ | METHODS_MODIFY | METHODS_DELETE
 
     def __init__(self,
-                 application: Application,
-                 session_maker: type=None):
+                 application,
+                 session_maker=None):
         """
         Create an instance of the tornado restless engine
 
@@ -41,22 +41,22 @@ class ApiManager(object):
 
     def create_api_blueprint(self,
                              model,
-                             methods: set=METHODS_READ,
-                             preprocessor: dict=None,
-                             postprocessor: dict=None,
-                             url_prefix: str='/api',
-                             collection_name: str=None,
-                             allow_patch_many: bool=False,
-                             allow_method_override: bool=False,
+                             methods=METHODS_READ,
+                             preprocessor=None,
+                             postprocessor=None,
+                             url_prefix='/api',
+                             collection_name=None,
+                             allow_patch_many=False,
+                             allow_method_override=False,
                              validation_exceptions=None,
-                             exclude_queries: bool=False,
-                             exclude_hybrids: bool=False,
-                             include_columns: list=None,
-                             exclude_columns: list=None,
-                             results_per_page: int=10,
-                             max_results_per_page: int=100,
-                             blueprint_prefix: str='',
-                             handler_class: type=BaseHandler) -> URLSpec:
+                             exclude_queries=False,
+                             exclude_hybrids=False,
+                             include_columns=None,
+                             exclude_columns=None,
+                             results_per_page=10,
+                             max_results_per_page=100,
+                             blueprint_prefix='',
+                             handler_class=BaseHandler):
         """
         Create a tornado route for a sqlalchemy model
 

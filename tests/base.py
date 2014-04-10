@@ -7,7 +7,7 @@ from datetime import datetime
 from json import loads
 import logging
 from threading import Thread
-from urllib.parse import urljoin
+from urlparse import urljoin
 import os
 
 from flask import Flask

@@ -22,7 +22,7 @@ __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '27.04.13 - 00:14'
 
 
-def _filter(instance, condition) -> dict:
+def _filter(instance, condition):
     """
         Filter properties of instace based on condition
 
@@ -86,7 +86,7 @@ class ModelWrapper(object):
             return self.model.__tablename__
 
     @staticmethod
-    def get_primary_keys(instance) -> dict:
+    def get_primary_keys(instance):
         """
             Returns the primary keys
 
@@ -106,7 +106,7 @@ class ModelWrapper(object):
     primary_keys.__doc__ = get_primary_keys.__func__.__doc__
 
     @staticmethod
-    def get_unique_keys(instance) -> dict:
+    def get_unique_keys(instance):
         """
             Returns the primary keys
 
@@ -126,7 +126,7 @@ class ModelWrapper(object):
     unique_keys.__doc__ = get_unique_keys.__func__.__doc__
 
     @staticmethod
-    def get_foreign_keys(instance) -> list:
+    def get_foreign_keys(instance):
         """
             Returns the foreign keys
 
@@ -147,7 +147,7 @@ class ModelWrapper(object):
     foreign_keys.__doc__ = get_foreign_keys.__func__.__doc__
 
     @staticmethod
-    def get_columns(instance) -> dict:
+    def get_columns(instance):
         """
             Returns the columns objects of the model
         """
@@ -164,7 +164,7 @@ class ModelWrapper(object):
     columns.__doc__ = get_columns.__func__.__doc__
 
     @staticmethod
-    def get_attributes(instance) -> dict:
+    def get_attributes(instance):
         """
             Returns the attributes of the model
         """
@@ -181,7 +181,7 @@ class ModelWrapper(object):
     attributes.__doc__ = get_attributes.__func__.__doc__
 
     @staticmethod
-    def get_relations(instance) -> dict:
+    def get_relations(instance):
         """
             Returns the relations objects of the model
         """
@@ -198,7 +198,7 @@ class ModelWrapper(object):
     relations.__doc__ = get_relations.__func__.__doc__
 
     @staticmethod
-    def get_hybrids(instance) -> list:
+    def get_hybrids(instance):
         """
             Returns the relations objects of the model
         """
@@ -211,7 +211,7 @@ class ModelWrapper(object):
                     if isinstance(field, hybrid_property)]
 
     @memoized_property
-    def hybrids(self) -> list:
+    def hybrids(self):
         """
         @see get_hybrids
         """
@@ -220,7 +220,7 @@ class ModelWrapper(object):
     hybrids.__doc__ = get_hybrids.__func__.__doc__
 
     @staticmethod
-    def get_proxies(instance) -> list:
+    def get_proxies(instance):
         """
             Returns the proxies objects of the model
 
@@ -254,7 +254,7 @@ class SessionedModelWrapper(ModelWrapper):
         self.session = session
 
     @staticmethod
-    def _apply_kwargs(instance: Query, **kwargs) -> Query:
+    def _apply_kwargs(instance, **kwargs):
         for expression in kwargs.pop('filters', []):
             if _is_ordering_expression(expression):
                 instance = instance.order_by(expression)
@@ -278,7 +278,7 @@ class SessionedModelWrapper(ModelWrapper):
         instance = flimit(instance)
         return instance
 
-    def one(self, filters: list=(), **kwargs) -> object:
+    def one(self, filters=(), **kwargs):
         """
             Gets one instance of the model filtered by filters
 
@@ -293,7 +293,7 @@ class SessionedModelWrapper(ModelWrapper):
 
         return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).one()
 
-    def all(self, filters: list=(), **kwargs) -> list:
+    def all(self, filters=(), **kwargs):
         """
             Gets all instances of the query instance
 
@@ -309,7 +309,7 @@ class SessionedModelWrapper(ModelWrapper):
 
         return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).all()
 
-    def update(self, values: dict, filters: list=(), **kwargs) -> int:
+    def update(self, values, filters=(), **kwargs):
         """
             Updates all instances of the model filtered by filters
 
@@ -326,7 +326,7 @@ class SessionedModelWrapper(ModelWrapper):
 
         return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).update(values)
 
-    def delete(self, filters: list=(), **kwargs) -> int:
+    def delete(self, filters=(), **kwargs):
         """
             Delete all instances of the model filtered by filters
 
@@ -343,7 +343,7 @@ class SessionedModelWrapper(ModelWrapper):
 
         return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).delete()
 
-    def count(self, filters: list=(), **kwargs) -> int:
+    def count(self, filters=(), **kwargs):
         """
             Gets the instance count
 
@@ -357,7 +357,7 @@ class SessionedModelWrapper(ModelWrapper):
 
         return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).count()
 
-    def get(self, *pargs) -> object:
+    def get(self, *pargs):
         """
             Gets one instance of the model based on primary_keys
 
