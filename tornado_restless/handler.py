@@ -89,7 +89,7 @@ class BaseHandler(RequestHandler):
         if allow_method_override and 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override']
 
-        super().initialize()
+        super(self.__class__, self).initialize()
 
         self.model = SessionedModelWrapper(model, manager.session_maker())
         self.methods = [method.lower() for method in methods]
@@ -201,9 +201,9 @@ class BaseHandler(RequestHandler):
                 self.finish(dict(type=exc_type.__module__ + "." + exc_type.__name__,
                                  message="%s" % exc_value, **exc_value.__dict__))
             else:
-                super().write_error(status_code, **kwargs)
+                super(self.__class__, self).write_error(status_code, **kwargs)
         else:
-            super().write_error(status_code, **kwargs)
+            super(self.__class__, self).write_error(status_code, **kwargs)
 
     def patch(self, instance_id=None):
         """
@@ -599,7 +599,7 @@ class BaseHandler(RequestHandler):
             :param kwargs: Additional keyword arguments @see tornado.web.RequestHandler.get_argument
         """
         try:
-            return super().get_argument(name, *args, **kwargs)
+            return super(self.__class__, self).get_argument(name, *args, **kwargs)
         except HTTPError:
             if name == "q" and self.request.method in ['PUT', 'PATCH']:
                 return self.get_body_argument(name, *args, **kwargs)

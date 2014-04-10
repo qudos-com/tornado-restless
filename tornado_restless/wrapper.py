@@ -250,7 +250,7 @@ class SessionedModelWrapper(ModelWrapper):
     """
 
     def __init__(self, model, session):
-        super().__init__(model)
+        super(self.__class__, self).__init__(model)
         self.session = session
 
     @staticmethod

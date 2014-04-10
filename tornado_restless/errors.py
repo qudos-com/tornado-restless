@@ -36,7 +36,7 @@ class DictConvertionError(HTTPError):
     """
 
     def __init__(self, instance_type, log_message=None, status_code=400, *args, **kwargs):
-        super().__init__(status_code, log_message, *args, **kwargs)
+        super(self.__class__, self).__init__(status_code, log_message, *args, **kwargs)
         self.instance_type = instance_type
 
 
@@ -52,5 +52,5 @@ except ImportError:
         """
 
         def __init__(self, method=None, log_message=None, status_code=405, *args, **kwargs):
-            super().__init__(status_code, log_message, *args, **kwargs)
+            super(self.__class__, self).__init__(status_code, log_message, *args, **kwargs)
             self.method = method
