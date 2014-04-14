@@ -11,6 +11,10 @@ from sqlalchemy.orm import object_mapper
 from sqlalchemy.orm.exc import UnmappedInstanceError
 from sqlalchemy.orm.query import Query
 
+from geoalchemy2.shape import to_shape
+from geoalchemy2.elements import WKTElement, WKBElement
+from geojson.mapping import to_mapping
+
 from .errors import IllegalArgumentError, DictConvertionError
 from .wrapper import ModelWrapper
 
@@ -211,6 +215,10 @@ def to_dict(instance,
     # Date & Time
     if isinstance(instance, __datetypes__):
         return instance.isoformat()
+
+    # A Geoalchemy element
+    if isinstance(instance, (WKTElement, WKBElement)):
+        return to_mapping(to_shape(instance))
 
     # Any Dictionary
     if isinstance(instance, dict) or hasattr(instance, 'items'):
