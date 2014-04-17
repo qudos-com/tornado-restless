@@ -228,7 +228,7 @@ class BaseHandler(RequestHandler):
             else:
                 raise MethodNotAllowedError(self.request.method, status_code=403)
         else:
-            result = self.patch_single(instance_id.split(","))
+            result = self.patch_single(instance_id.split(self.ID_SEPARATOR))
 
         self._call_postprocessor(result=result)
         self.finish(result)
@@ -348,7 +348,7 @@ class BaseHandler(RequestHandler):
             else:
                 raise MethodNotAllowedError(self.request.method, status_code=403)
         else:
-            result = self.delete_single(instance_id.split(","))
+            result = self.delete_single(instance_id.split(self.ID_SEPARATOR))
 
         self._call_postprocessor(result=result)
         self.finish(result)
@@ -439,7 +439,7 @@ class BaseHandler(RequestHandler):
             else:
                 raise MethodNotAllowedError(self.request.method, status_code=403)
         else:
-            result = self.put_single(instance_id.split(","))
+            result = self.put_single(instance_id.split(self.ID_SEPARATOR))
 
         self._call_postprocessor(result=result)
         self.finish(result)
