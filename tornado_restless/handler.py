@@ -534,12 +534,12 @@ class BaseHandler(RequestHandler):
                 if len(value) == 0:
                     payload[key] = None
                 elif len(value) == 1:
-                    payload[key] = str(value[0], encoding=self.get_content_encoding())
+                    payload[key] = value[0].decode(self.get_content_encoding())
                 else:
-                    payload[key] = [str(value, encoding=self.get_content_encoding()) for value in value]
+                    payload[key] = [value.decode(self.get_content_encoding()) for value in value]
             return payload
         elif 'application/json' in content_type:
-            return loads(str(self.request.body, encoding=self.get_content_encoding()))
+            return loads(self.request.body.decode(self.get_content_encoding()))
         else:
             raise HTTPError(415, content_type=content_type)
 
