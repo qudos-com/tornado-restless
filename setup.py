@@ -6,8 +6,16 @@
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '29.04.13 - 15:34'
 
+import re
+
 from setuptools import setup
-from tornado_restless import __version__
+
+with open('tornado_restless/__init__.py') as f:
+    for l in f:
+        try:
+            __version__ = re.match('__version__\s*=\s*[\'\"](.+)[\"\']', l).groups(1)[0]
+        except AttributeError:
+            pass
 
 setup(
     name='Tornado-Restless',
