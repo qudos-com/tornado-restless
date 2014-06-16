@@ -120,6 +120,7 @@ class BaseHandler(RequestHandler):
         """
             Finish the request
         """
+        self.model.session.close()
         self._call_postprocessor()
 
     def parse_columns(self, strings):
