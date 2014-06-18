@@ -259,9 +259,16 @@ class SessionedModelWrapper(ModelWrapper):
         Wrapper around sqlalchemy model for having some easier functions
     """
 
-    def __init__(self, model, session):
-        super(self.__class__, self).__init__(model)
+    def __init__(self, model, session, query_options=None):
+        super(SessionedModelWrapper, self).__init__(model)
         self.session = session
+        self.query_options = query_options
+
+    def _get_instance(self):
+        if isinstance(self, SessionedModelWrapper):
+            return self.session.query(self.model)
+        else:
+            return self
 
     @staticmethod
     def _apply_kwargs(instance, **kwargs):
@@ -288,6 +295,11 @@ class SessionedModelWrapper(ModelWrapper):
         instance = flimit(instance)
         return instance
 
+    def apply_options(self, query):
+        if self.query_options:
+            query = query.options(*self.query_options)
+        return query
+
     def one(self, filters=(), **kwargs):
         """
             Gets one instance of the model filtered by filters
@@ -296,12 +308,10 @@ class SessionedModelWrapper(ModelWrapper):
             :param kwargs: Additional filters passed to filter_by
             :keyword offset: Offset for request
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
-        return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).one()
+        instance = self._get_instance()
+        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = self.apply_options(query)
+        return query.one()
 
     def all(self, filters=(), **kwargs):
         """
@@ -312,12 +322,10 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword limit: Limit for request
             :keyword offset: Offset for request
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
-        return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).all()
+        instance = self._get_instance()
+        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = self.apply_options(query)
+        return query.all()
 
     def update(self, values, filters=(), **kwargs):
         """
@@ -329,12 +337,10 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword limit: Limit for request
             :keyword offset: Offset for request
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
-        return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).update(values)
+        instance = self._get_instance()
+        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = self.apply_options(query)
+        return query.update(values)
 
     def delete(self, filters=(), **kwargs):
         """
@@ -346,12 +352,10 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword limit: Limit for request
             :keyword offset: Offset for request
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
-        return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).delete()
+        instance = self._get_instance()
+        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = self.apply_options(query)
+        return query.delete()
 
     def count(self, filters=(), **kwargs):
         """
@@ -360,12 +364,10 @@ class SessionedModelWrapper(ModelWrapper):
             :param filters: Filters and OrderBy Clauses
             :param kwargs: Additional filters passed to filter_by
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
-        return SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs).order_by(False).count()
+        instance = self._get_instance()
+        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = self.apply_options(query)
+        return query.order_by(False).count()
 
     def get(self, *pargs):
         """
@@ -374,15 +376,12 @@ class SessionedModelWrapper(ModelWrapper):
             :param pargs: ident
             :raise NoResultFound: If no element has been received
         """
-        if isinstance(self, SessionedModelWrapper):
-            instance = self.session.query(self.model)
-        else:
-            instance = self
-
+        instance = self._get_instance()
+        query = self.apply_options(instance)
         if not isinstance(pargs, tuple):
-            rtn = instance.get(*pargs)
+            rtn = query.get(*pargs)
         else:
-            rtn = instance.get(pargs)
+            rtn = query.get(pargs)
 
         if not rtn:
             raise NoResultFound("No element recieved for %s(%s)" % (self.__collectionname__, pargs))

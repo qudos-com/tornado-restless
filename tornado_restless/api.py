@@ -56,7 +56,8 @@ class ApiManager(object):
                              results_per_page=10,
                              max_results_per_page=100,
                              blueprint_prefix='',
-                             handler_class=BaseHandler):
+                             handler_class=BaseHandler,
+                             query_options=None):
         """
         Create a tornado route for a sqlalchemy model
 
@@ -78,6 +79,7 @@ class ApiManager(object):
         :param postprocessor: A dictionary of list of postprocessor that get called
         :param handler_class: The Handler Class that will be used in the route
         :type handler_class: tornado_restless.handler.BaseHandler or a subclass
+        :param query_options: An array of options to be appied to SQLAlchemy queries
         :return: :class:`tornado.web.URLSpec`
         :raise: IllegalArgumentError
         """
@@ -99,7 +101,8 @@ class ApiManager(object):
                   'exclude_queries': exclude_queries,
                   'exclude_hybrids': exclude_hybrids,
                   'results_per_page': results_per_page,
-                  'max_results_per_page': max_results_per_page}
+                  'max_results_per_page': max_results_per_page,
+                  'query_options': query_options}
 
         blueprint = URLSpec(
             "%s/%s(?:/(.+))?[/]?" % (url_prefix, table_name),
