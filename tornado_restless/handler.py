@@ -148,7 +148,7 @@ class BaseHandler(RequestHandler):
         # Now parse relations
         for (key, item) in columns.items():
             if isinstance(item, list):
-                columns[key] = itertools.chain.from_iterable(self.parse_columns(strings) for strings in item)
+                columns[key] = self.parse_columns(item)
 
         # Return
         return columns
