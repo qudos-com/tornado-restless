@@ -179,6 +179,7 @@ def to_deep(include,
 
     try:
         rtn['exclude'] = exclude[key]
+        rtn['include'] = None
     except (TypeError, KeyError):
         rtn['exclude'] = None
 
@@ -251,7 +252,7 @@ def to_dict(instance,
     # Include AssociationProxy and Hybrids (may be list/dict/col)
     for column in attributes:
 
-        if exclude is not None and column in exclude:
+        if exclude is not None and column in exclude and exclude[column] is True:
             continue
         if column in rtn:
             continue
