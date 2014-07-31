@@ -4,6 +4,7 @@
 
 """
 from datetime import datetime, date, time
+from uuid import UUID
 import collections
 import itertools
 
@@ -220,6 +221,10 @@ def to_dict(instance,
     # A Geoalchemy element
     if isinstance(instance, (WKTElement, WKBElement)):
         return to_mapping(to_shape(instance))
+
+    # A UUID
+    if isinstance(instance, UUID):
+        return unicode(instance)
 
     # Any Dictionary
     if isinstance(instance, dict) or hasattr(instance, 'items'):
