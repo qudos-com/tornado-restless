@@ -621,7 +621,13 @@ class BaseHandler(RequestHandler):
 
         # Include Columns
         if self.include is not None:
-            values = {k: self.get_body_argument(k) for k in self.include}
+            values = {}
+            for k in self.include:
+                try:
+                    values[k] = self.get_body_argument(k)
+                except HTTPError as e:
+                    if e.status_code != 400:
+                        raise
         else:
             values = {k: v for k, v in self.get_body_arguments().items()}
 
