@@ -17,7 +17,7 @@ import itertools
 
 from sqlalchemy import inspect as sqinspect
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm.exc import UnmappedInstanceError
+from sqlalchemy.orm.exc import NoResultFound, UnmappedInstanceError
 from sqlalchemy.util import memoized_instancemethod, memoized_property
 from tornado.web import RequestHandler, HTTPError
 
@@ -686,7 +686,10 @@ class BaseHandler(RequestHandler):
         if instance_id is None:
             result = self.get_many()
         else:
-            result = self.get_single(self.parse_pk(instance_id))
+            try:
+                result = self.get_single(self.parse_pk(instance_id))
+            except NoResultFound:
+                raise HTTPError(404)
 
         self._call_postprocessor(result=result)
         self.finish(result)
