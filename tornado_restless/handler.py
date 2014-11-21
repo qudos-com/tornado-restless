@@ -62,6 +62,7 @@ class BaseHandler(RequestHandler):
                    exclude_queries,
                    exclude_hybrids,
                    include_columns,
+                   include_columns_many,
                    exclude_columns,
                    results_per_page,
                    max_results_per_page,
@@ -108,6 +109,7 @@ class BaseHandler(RequestHandler):
         self.max_results_per_page = max_results_per_page
 
         self.include = self.parse_columns(include_columns)
+        self.include_many = self.parse_columns(include_columns_many)
         self.exclude = self.parse_columns(exclude_columns)
 
         self.to_dict_options = {'execute_queries': not exclude_queries, 'execute_hybrids': not exclude_hybrids}
@@ -766,11 +768,16 @@ class BaseHandler(RequestHandler):
         else:
             total_pages = 1
 
+        if self.include_many is not None:
+            include = self.include_many
+        else:
+            include = self.include
+
         # Get Instances
         if search_params['single']:
             instance = self.model.one(offset=search_params['offset'],
                                       filters=filters)
-            return self.to_dict(instance)
+            return self.to_dict(instance, include)
         else:
             instances = self.model.all(offset=search_params['offset'],
                                        limit=search_params['limit'],
@@ -778,7 +785,7 @@ class BaseHandler(RequestHandler):
             return {'num_results': num_results,
                     "total_pages": total_pages,
                     "page": page + 1,
-                    "objects": self.to_dict(instances)}
+                    "objects": self.to_dict(instances, include)}
 
     def _call_preprocessor(self, *args, **kwargs):
         """
@@ -807,14 +814,16 @@ class BaseHandler(RequestHandler):
         """
         return logging.getLogger('tornado.restless')
 
-    def to_dict(self, instance):
+    def to_dict(self, instance, include=None):
         """
             Wrapper to convert.to_dict with arguments from blueprint init
 
             :param instance: Instance to be translated
         """
+        if include is None:
+            include = self.include
         return to_dict(instance,
-                       include=self.include,
+                       include=include,
                        exclude=self.exclude,
                        options=self.to_dict_options)
 

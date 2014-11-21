@@ -52,6 +52,7 @@ class ApiManager(object):
                              exclude_queries=False,
                              exclude_hybrids=False,
                              include_columns=None,
+                             include_columns_many=None,
                              exclude_columns=None,
                              results_per_page=10,
                              max_results_per_page=100,
@@ -71,6 +72,7 @@ class ApiManager(object):
         :param exclude_queries: Don't execude dynamic queries (like from associations or lazy relations)
         :param exclude_hybrids: When exclude_queries is True and exclude_hybrids is False, hybrids are still included.
         :param include_columns: Whitelist of columns to be included
+        :param include_columns_many: Whitelist of columns to be included for get_many requests (defaults to include_columns)
         :param exclude_columns: Blacklist of columns to be excluded
         :param results_per_page: The default value of how many results are returned per request
         :param max_results_per_page: The hard upper limit of resutest per page
@@ -97,6 +99,7 @@ class ApiManager(object):
                   'allow_method_override': allow_method_override,
                   'validation_exceptions': validation_exceptions,
                   'include_columns': include_columns,
+                  'include_columns_many': include_columns_many,
                   'exclude_columns': exclude_columns,
                   'exclude_queries': exclude_queries,
                   'exclude_hybrids': exclude_hybrids,
