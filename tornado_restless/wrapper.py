@@ -295,9 +295,12 @@ class SessionedModelWrapper(ModelWrapper):
         instance = flimit(instance)
         return instance
 
-    def apply_options(self, query):
+    def apply_options(self, query, method):
         if self.query_options:
-            query = query.options(*self.query_options)
+            if callable(self.query_options):
+                query = self.query_options(query, method)
+            else:
+                query = query.options(*self.query_options)
         return query
 
     def one(self, filters=(), **kwargs):
@@ -310,7 +313,7 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query)
+        query = self.apply_options(query, 'one')
         return query.one()
 
     def all(self, filters=(), **kwargs):
@@ -324,7 +327,7 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query)
+        query = self.apply_options(query, 'all')
         return query.all()
 
     def update(self, values, filters=(), **kwargs):
@@ -339,7 +342,7 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query)
+        query = self.apply_options(query, 'update')
         return query.update(values)
 
     def delete(self, filters=(), **kwargs):
@@ -354,7 +357,7 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query)
+        query = self.apply_options(query, 'delete')
         return query.delete()
 
     def count(self, filters=(), **kwargs):
@@ -366,7 +369,7 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query)
+        query = self.apply_options(query, 'count')
         return query.order_by(False).count()
 
     def get(self, *pargs):
@@ -377,7 +380,7 @@ class SessionedModelWrapper(ModelWrapper):
             :raise NoResultFound: If no element has been received
         """
         instance = self._get_instance()
-        query = self.apply_options(instance)
+        query = self.apply_options(instance, 'get')
         if not isinstance(pargs, tuple):
             rtn = query.get(*pargs)
         else:

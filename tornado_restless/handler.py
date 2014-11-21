@@ -85,7 +85,7 @@ class BaseHandler(RequestHandler):
         :param exclude_columns: Blacklist of columns to be excluded
         :param results_per_page: The default value of how many results are returned per request
         :param max_results_per_page: The hard upper limit of resutest per page
-        :param query_options: An array of options to be appied to SQLAlchemy queries
+        :param query_options: An array of options to be appied to SQLAlchemy queries, or a callable
 
         :reqheader X-HTTP-Method-Override: If allow_method_override is True, this header overwrites the request method
         """
