@@ -768,17 +768,17 @@ class BaseHandler(RequestHandler):
         else:
             total_pages = 1
 
-        if self.include_many is not None:
-            include = self.include_many
-        else:
-            include = self.include
-
         # Get Instances
         if search_params['single']:
             instance = self.model.one(offset=search_params['offset'],
                                       filters=filters)
-            return self.to_dict(instance, include)
+            return self.to_dict(instance, self.include)
         else:
+            if self.include_many is not None:
+                include = self.include_many
+            else:
+                include = self.include
+
             instances = self.model.all(offset=search_params['offset'],
                                        limit=search_params['limit'],
                                        filters=filters)
