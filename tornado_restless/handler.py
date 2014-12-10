@@ -7,13 +7,12 @@
      use the modification via create_api_blueprint(handler_class=...)
 """
 import inspect
-from json import loads
 import logging
+import sys
+from json import dumps, loads
 from math import ceil
 from traceback import print_exception
 from urlparse import parse_qs
-import sys
-import itertools
 
 from sqlalchemy import inspect as sqinspect
 from sqlalchemy.exc import SQLAlchemyError
@@ -702,7 +701,7 @@ class BaseHandler(RequestHandler):
             result = self.get_single(self.parse_pk(instance_id))
 
         self._call_postprocessor(result=result)
-        self.finish(result)
+        self.finish(dumps(result))
 
     def get_single(self, instance_id):
         """
@@ -728,19 +727,24 @@ class BaseHandler(RequestHandler):
             Note that it is possible to provide offset and page as argument then
             it will return instances of the nth page and skip offset items
 
-            :statuscode 400: if results_per_page > max_results_per_page or offset < 0
+            :statuscode 400: if results_per_page > max_results_per_page or offset < 0 or all and single
 
             :query results_per_page: Overwrite the returned results_per_page
             :query offset: Skip offset instances
             :query page: Return nth page
             :query limit: limit the count of modified instances
             :query single: If true sqlalchemy will raise an error if zero or more than one instances would be deleted
+            :query all: If true, all results will be returned (no pagination)
         """
 
         # All search params
         search_params = {'single': self.get_query_argument("single", False),
+                         'all': self.get_query_argument('all', False),
                          'results_per_page': int(self.get_argument("results_per_page", self.results_per_page)),
                          'offset': int(self.get_query_argument("offset", 0))}
+
+        if search_params['single'] and search_params['all']:
+            raise IllegalArgumentError("single and all are both set")
 
         # Results per Page Check
         if search_params['results_per_page'] > self.max_results_per_page:
@@ -761,23 +765,29 @@ class BaseHandler(RequestHandler):
         # Call Preprocessor
         self._call_preprocessor(filters=filters, search_params=search_params)
 
-        # Num Results
-        num_results = self.model.count(filters=filters)
-        if search_params['results_per_page']:
-            total_pages = ceil(num_results / search_params['results_per_page'])
+        # determine columns to include
+        if not search_params['single'] and self.include_many is not None:
+            include = self.include_many
         else:
-            total_pages = 1
+            include = self.include
 
         # Get Instances
         if search_params['single']:
             instance = self.model.one(offset=search_params['offset'],
                                       filters=filters)
-            return self.to_dict(instance, self.include)
+            return self.to_dict(instance, include)
+        elif search_params['all']:
+            instances = self.model.all(offset=search_params['offset'],
+                                       limit=search_params['limit'],
+                                       filters=filters)
+            return self.to_dict(instances, include)
         else:
-            if self.include_many is not None:
-                include = self.include_many
+            # Num Results
+            num_results = self.model.count(filters=filters)
+            if search_params['results_per_page']:
+                total_pages = ceil(num_results / search_params['results_per_page'])
             else:
-                include = self.include
+                total_pages = 1
 
             instances = self.model.all(offset=search_params['offset'],
                                        limit=search_params['limit'],
