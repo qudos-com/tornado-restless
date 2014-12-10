@@ -154,6 +154,23 @@ class BaseHandler(RequestHandler):
         # Return
         return columns
 
+    def combine_columns(self, requested, include):
+        """
+            Combine two sets of column definitions created by parse_columns
+        """
+        combined = {}
+        for k, v in requested.iteritems():
+            include_value = include.get(k)
+            if not include_value:
+                continue
+            elif include_value is True:
+                combined[k] = v
+            elif v is True:
+                combined[k] = include_value
+            else:
+                combined[k] = self.combine_columns(v, include_value)
+        return combined
+
     def get_filters(self):
         """
             Returns a list of filters made by the query argument
@@ -729,6 +746,7 @@ class BaseHandler(RequestHandler):
 
             :statuscode 400: if results_per_page > max_results_per_page or offset < 0 or all and single
 
+            :query fields: Return only a subset of fields
             :query results_per_page: Overwrite the returned results_per_page
             :query offset: Skip offset instances
             :query page: Return nth page
@@ -766,10 +784,7 @@ class BaseHandler(RequestHandler):
         self._call_preprocessor(filters=filters, search_params=search_params)
 
         # determine columns to include
-        if not search_params['single'] and self.include_many is not None:
-            include = self.include_many
-        else:
-            include = self.include
+        include = self._get_include_columns(search_params['single'])
 
         # Get Instances
         if search_params['single']:
@@ -796,6 +811,17 @@ class BaseHandler(RequestHandler):
                     "total_pages": total_pages,
                     "page": page + 1,
                     "objects": self.to_dict(instances, include)}
+
+    def _get_include_columns(self, single):
+        if not single and self.include_many is not None:
+            include = self.include_many
+        else:
+            include = self.include
+        requested_fields = self.get_query_argument('fields', False)
+        if requested_fields:
+            requested_fields = self.parse_columns(requested_fields)
+            include = self.combine_columns(requested_fields, include)
+        return include
 
     def _call_preprocessor(self, *args, **kwargs):
         """
