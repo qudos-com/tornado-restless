@@ -718,6 +718,7 @@ class BaseHandler(RequestHandler):
             result = self.get_single(self.parse_pk(instance_id))
 
         self._call_postprocessor(result=result)
+        self.set_header("Content-Type", "application/json; charset=UTF-8")
         self.finish(dumps(result))
 
     def get_single(self, instance_id):
