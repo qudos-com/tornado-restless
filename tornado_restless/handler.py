@@ -735,8 +735,11 @@ class BaseHandler(RequestHandler):
         # Get Instance
         instance = self.model.get(*instance_id)
 
+        # get columns to include
+        include = self._get_include_columns(True)
+
         # To Dict
-        return self.to_dict(instance)
+        return self.to_dict(instance, include)
 
     def get_many(self):
         """
