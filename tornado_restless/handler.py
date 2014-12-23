@@ -794,7 +794,6 @@ class BaseHandler(RequestHandler):
             return self.to_dict(instance, include)
         elif search_params['all']:
             instances = self.model.all(offset=search_params['offset'],
-                                       limit=search_params['limit'],
                                        filters=filters)
             return self.to_dict(instances, include)
         else:
