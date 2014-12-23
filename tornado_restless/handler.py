@@ -823,7 +823,10 @@ class BaseHandler(RequestHandler):
         requested_fields = self.get_query_argument('fields', False)
         if requested_fields:
             requested_fields = self.parse_columns(requested_fields)
-            include = self.combine_columns(requested_fields, include)
+            if include is None:
+                include = requested_fields
+            else:
+                include = self.combine_columns(requested_fields, include)
         return include
 
     def _call_preprocessor(self, *args, **kwargs):
