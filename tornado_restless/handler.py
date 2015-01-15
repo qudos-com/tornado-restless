@@ -20,7 +20,7 @@ from sqlalchemy.orm.exc import NoResultFound, UnmappedInstanceError, MultipleRes
 from sqlalchemy.util import memoized_instancemethod, memoized_property
 from tornado.web import RequestHandler, HTTPError
 
-from .convert import to_dict, to_filter, parse_columns
+from .convert import to_dict, to_filter, parse_columns, combine_columns
 from .errors import IllegalArgumentError, MethodNotAllowedError, ProcessingException
 from .wrapper import SessionedModelWrapper
 
@@ -130,21 +130,7 @@ class BaseHandler(RequestHandler):
         return parse_columns(strings)
 
     def combine_columns(self, requested, include):
-        """
-            Combine two sets of column definitions created by parse_columns
-        """
-        combined = {}
-        for k, v in requested.iteritems():
-            include_value = include.get(k)
-            if not include_value:
-                continue
-            elif include_value is True:
-                combined[k] = v
-            elif v is True:
-                combined[k] = include_value
-            else:
-                combined[k] = self.combine_columns(v, include_value)
-        return combined
+        return combine_columns(requested, include)
 
     def get_filters(self):
         """

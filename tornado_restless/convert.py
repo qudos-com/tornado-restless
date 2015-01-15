@@ -191,6 +191,24 @@ def parse_columns(strings):
     return columns
 
 
+def combine_columns(requested, include):
+    """
+        Combine two sets of column definitions created by parse_columns
+    """
+    combined = {}
+    for k, v in requested.iteritems():
+        include_value = include.get(k)
+        if not include_value:
+            continue
+        elif include_value is True:
+            combined[k] = v
+        elif v is True:
+            combined[k] = include_value
+        else:
+            combined[k] = combine_columns(v, include_value)
+    return combined
+
+
 def to_deep(include,
             exclude,
             key):
