@@ -293,7 +293,7 @@ class BaseHandler(RequestHandler):
 
                 # Set Values
                 for (key, value) in values.items():
-                    self.logger.debug("%r.%s => %s" % (instance, key, value))
+                    self.logger.debug(u"%r.%s => %s" % (instance, key, value))
                     setattr(instance, key, value)
 
                 # Flush
@@ -634,13 +634,13 @@ class BaseHandler(RequestHandler):
         # Silently Ignore proxies
         for proxy in self.model.proxies:
             if proxy.key in values:
-                self.logger.debug("Skipping proxy: %s" % proxy.key)
+                self.logger.debug(u"Skipping proxy: %s" % proxy.key)
                 del values[proxy.key]
 
         # Silently Ignore hybrids
         for hybrid in self.model.hybrids:
             if hybrid.key in values:
-                self.logger.debug("Skipping hybrid: %s" % hybrid.key)
+                self.logger.debug(u"Skipping hybrid: %s" % hybrid.key)
                 del values[hybrid.key]
 
         # Handle Relations extra
