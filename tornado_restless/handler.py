@@ -21,7 +21,7 @@ from sqlalchemy.orm.exc import NoResultFound, UnmappedInstanceError, MultipleRes
 from sqlalchemy.util import memoized_instancemethod, memoized_property
 from tornado.web import RequestHandler, HTTPError
 
-from .convert import to_dict, to_filter
+from .convert import to_dict, to_filter, parse_columns
 from .errors import IllegalArgumentError, MethodNotAllowedError, ProcessingException
 from .wrapper import SessionedModelWrapper
 
@@ -122,33 +122,8 @@ class BaseHandler(RequestHandler):
         """
         self._call_postprocessor()
 
-    def parse_columns(self, strings: list) -> dict:
-        """
-            Parse a list of column names (name1, name2, relation.name1, ...)
-
-            :param strings: List of Column Names
-            :return:
-        """
-        columns = {}
-
-        # Strings
-        if strings is None:
-            return None
-
-        # Parse
-        for column in [column.split(".", 1) for column in strings]:
-            if len(column) == 1:
-                columns[column[0]] = True
-            else:
-                columns.setdefault(column[0], []).append(column[1])
-
-        # Now parse relations
-        for (key, item) in columns.items():
-            if isinstance(item, list):
-                columns[key] = itertools.chain.from_iterable(self.parse_columns(strings) for strings in item)
-
-        # Return
-        return columns
+    def parse_columns(self, strings):
+        return parse_columns(strings)
 
     def get_filters(self):
         """

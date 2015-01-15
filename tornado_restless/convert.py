@@ -158,6 +158,35 @@ def to_filter(instance,
     return alchemy_filters
 
 
+def parse_columns(strings):
+    """
+        Parse a list of column names (name1, name2, relation.name1, ...)
+
+        :param strings: List of Column Names
+        :return:
+    """
+    columns = {}
+
+    # Strings
+    if strings is None:
+        return None
+
+    # Parse
+    for column in [column.split(".", 1) for column in strings]:
+        if len(column) == 1:
+            columns[column[0]] = True
+        else:
+            columns.setdefault(column[0], []).append(column[1])
+
+    # Now parse relations
+    for (key, item) in columns.items():
+        if isinstance(item, list):
+            columns[key] = parse_columns(item)
+
+    # Return
+    return columns
+
+
 def to_deep(include,
             exclude,
             key):
