@@ -478,6 +478,9 @@ class BaseHandler(RequestHandler):
             # Create Instance
             instance = self.model(**values)
 
+            # Call Postprocessor
+            self._call_postprocessor(instance=instance)
+
             # Flush
             self.model.session.commit()
 
