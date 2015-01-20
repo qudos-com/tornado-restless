@@ -312,8 +312,8 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
+        instance = self.apply_options(instance, 'one')
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query, 'one')
         return query.one()
 
     def all(self, filters=(), **kwargs):
@@ -326,8 +326,8 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
+        instance = self.apply_options(instance, 'all')
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query, 'all')
         return query.all()
 
     def update(self, values, filters=(), **kwargs):
@@ -341,8 +341,8 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
+        instance = self.apply_options(instance, 'update')
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query, 'update')
         return query.update(values)
 
     def delete(self, filters=(), **kwargs):
@@ -356,8 +356,8 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
+        instance = self.apply_options(instance, 'delete')
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query, 'delete')
         return query.delete()
 
     def count(self, filters=(), **kwargs):
@@ -368,8 +368,8 @@ class SessionedModelWrapper(ModelWrapper):
             :param kwargs: Additional filters passed to filter_by
         """
         instance = self._get_instance()
+        instance = self.apply_options(instance, 'count')
         query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
-        query = self.apply_options(query, 'count')
         return query.order_by(False).count()
 
     def get(self, *pargs):
