@@ -201,7 +201,7 @@ class BaseHandler(RequestHandler):
         else:
             super(BaseHandler, self).write_error(status_code, **kwargs)
 
-    def patch(self, instance_id=None):
+    def patch(self, instance_id=None, **kwargs):
         """
             PATCH (update instance) request
 
@@ -320,7 +320,7 @@ class BaseHandler(RequestHandler):
             # Commit
             self.model.session.commit()
 
-    def delete(self, instance_id=None):
+    def delete(self, instance_id=None, **kwargs):
         """
             DELETE (delete instance) request
 
@@ -410,7 +410,7 @@ class BaseHandler(RequestHandler):
         self.set_status(204, "Instance removed")
         return {}
 
-    def put(self, instance_id=None):
+    def put(self, instance_id=None, **kwargs):
         """
             PUT (update instance) request
 
@@ -442,7 +442,7 @@ class BaseHandler(RequestHandler):
     put_many = patch_many
     put_single = patch_single
 
-    def post(self, instance_id=None):
+    def post(self, instance_id=None, **kwargs):
         """
             POST (new input) request
 
@@ -660,7 +660,7 @@ class BaseHandler(RequestHandler):
 
         return values
 
-    def get(self, instance_id=None):
+    def get(self, instance_id=None, **kwargs):
         """
             GET request
 
