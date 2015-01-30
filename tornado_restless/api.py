@@ -45,6 +45,7 @@ class ApiManager(object):
                              preprocessor=None,
                              postprocessor=None,
                              url_prefix='/api',
+                             url_path=None,
                              collection_name=None,
                              allow_patch_many=False,
                              allow_method_override=False,
@@ -88,8 +89,6 @@ class ApiManager(object):
         if exclude_columns is not None and include_columns is not None:
             raise IllegalArgumentError('Cannot simultaneously specify both include columns and exclude columns.')
 
-        table_name = collection_name if collection_name is not None else model.__tablename__
-
         kwargs = {'model': model,
                   'manager': self,
                   'methods': methods,
@@ -107,11 +106,15 @@ class ApiManager(object):
                   'max_results_per_page': max_results_per_page,
                   'query_options': query_options}
 
+        if collection_name is None:
+            collection_name = model.__tablename__
+        if url_path is None:
+            url_path = "%s(?:/(.+))?/?" % collection_name
         blueprint = URLSpec(
-            "%s/%s(?:/(.+))?[/]?" % (url_prefix, table_name),
+            r"%s/%s$" % (url_prefix, url_path),
             handler_class,
             kwargs,
-            '%s%s' % (blueprint_prefix, table_name))
+            '%s%s' % (blueprint_prefix, collection_name))
         return blueprint
 
     def create_api(self,
