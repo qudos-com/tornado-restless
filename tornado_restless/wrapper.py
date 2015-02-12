@@ -295,15 +295,15 @@ class SessionedModelWrapper(ModelWrapper):
         instance = flimit(instance)
         return instance
 
-    def apply_options(self, query, method):
+    def apply_options(self, query, method, include_columns=None):
         if self.query_options:
             if callable(self.query_options):
-                query = self.query_options(query, method)
+                query = self.query_options(query, method, include_columns)
             else:
                 query = query.options(*self.query_options)
         return query
 
-    def one(self, filters=(), **kwargs):
+    def one(self, filters=(), include_columns=None, **kwargs):
         """
             Gets one instance of the model filtered by filters
 
@@ -312,11 +312,12 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
-        instance = self.apply_options(instance, 'one')
-        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        instance = self.apply_options(instance, 'one', include_columns)
+        query = SessionedModelWrapper._apply_kwargs(
+            instance, filters=filters, **kwargs)
         return query.one()
 
-    def all(self, filters=(), **kwargs):
+    def all(self, filters=(), include_columns=None, **kwargs):
         """
             Gets all instances of the query instance
 
@@ -326,11 +327,12 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
-        instance = self.apply_options(instance, 'all')
-        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        instance = self.apply_options(instance, 'all', include_columns)
+        query = SessionedModelWrapper._apply_kwargs(
+            instance, filters=filters, **kwargs)
         return query.all()
 
-    def update(self, values, filters=(), **kwargs):
+    def update(self, values, filters=(), include_columns=None, **kwargs):
         """
             Updates all instances of the model filtered by filters
 
@@ -341,8 +343,9 @@ class SessionedModelWrapper(ModelWrapper):
             :keyword offset: Offset for request
         """
         instance = self._get_instance()
-        instance = self.apply_options(instance, 'update')
-        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        instance = self.apply_options(instance, 'update', include_columns)
+        query = SessionedModelWrapper._apply_kwargs(
+            instance, filters=filters, **kwargs)
         return query.update(values)
 
     def delete(self, filters=(), **kwargs):
@@ -357,10 +360,11 @@ class SessionedModelWrapper(ModelWrapper):
         """
         instance = self._get_instance()
         instance = self.apply_options(instance, 'delete')
-        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        query = SessionedModelWrapper._apply_kwargs(
+            instance, filters=filters, **kwargs)
         return query.delete()
 
-    def count(self, filters=(), **kwargs):
+    def count(self, filters=(), include_columns=None, **kwargs):
         """
             Gets the instance count
 
@@ -368,11 +372,12 @@ class SessionedModelWrapper(ModelWrapper):
             :param kwargs: Additional filters passed to filter_by
         """
         instance = self._get_instance()
-        instance = self.apply_options(instance, 'count')
-        query = SessionedModelWrapper._apply_kwargs(instance, filters=filters, **kwargs)
+        instance = self.apply_options(instance, 'count', include_columns)
+        query = SessionedModelWrapper._apply_kwargs(
+            instance, filters=filters, **kwargs)
         return query.order_by(False).count()
 
-    def get(self, *pargs):
+    def get(self, *pargs, **kwargs):
         """
             Gets one instance of the model based on primary_keys
 
@@ -380,7 +385,8 @@ class SessionedModelWrapper(ModelWrapper):
             :raise NoResultFound: If no element has been received
         """
         instance = self._get_instance()
-        query = self.apply_options(instance, 'get')
+        query = self.apply_options(instance, 'get',
+                                   kwargs.get('include_columns'))
         if not isinstance(pargs, tuple):
             rtn = query.get(*pargs)
         else:

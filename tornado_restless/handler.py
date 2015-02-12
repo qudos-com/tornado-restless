@@ -715,14 +715,15 @@ class BaseHandler(RequestHandler):
         # Call Preprocessor
         self._call_preprocessor(instance_id=instance_id)
 
-        # Get Instance
-        instance = self.model.get(*instance_id)
-
         # get columns to include
-        include = self._get_include_columns(True)
+        include_columns = self._get_include_columns(True)
+
+        # Get Instance
+        instance = self.model.get(*instance_id,
+                                  include_columns=include_columns)
 
         # To Dict
-        return self.to_dict(instance, include)
+        return self.to_dict(instance, include_columns)
 
     def get_many(self):
         """
@@ -771,17 +772,19 @@ class BaseHandler(RequestHandler):
         self._call_preprocessor(filters=filters, search_params=search_params)
 
         # determine columns to include
-        include = self._get_include_columns(search_params['single'])
+        include_columns = self._get_include_columns(search_params['single'])
 
         # Get Instances
         if search_params['single']:
             instance = self.model.one(offset=search_params['offset'],
-                                      filters=filters)
-            return self.to_dict(instance, include)
+                                      filters=filters,
+                                      include_columns=include_columns)
+            return self.to_dict(instance, include_columns)
         elif search_params['all']:
             instances = self.model.all(offset=search_params['offset'],
-                                       filters=filters)
-            return self.to_dict(instances, include)
+                                       filters=filters,
+                                       include_columns=include_columns)
+            return self.to_dict(instances, include_columns)
         else:
             # Num Results
             num_results = self.model.count(filters=filters)
@@ -792,11 +795,12 @@ class BaseHandler(RequestHandler):
 
             instances = self.model.all(offset=search_params['offset'],
                                        limit=search_params['limit'],
-                                       filters=filters)
+                                       filters=filters,
+                                       include_columns=include_columns)
             return {'num_results': num_results,
                     "total_pages": total_pages,
                     "page": page + 1,
-                    "objects": self.to_dict(instances, include)}
+                    "objects": self.to_dict(instances, include_columns)}
 
     def _get_include_columns(self, single):
         if not single and self.include_many is not None:
