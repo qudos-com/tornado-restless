@@ -29,6 +29,23 @@ __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '26.04.13 - 22:09'
 
 
+def merge_dicts(a, b, path=None):
+    """helper function to recursively merge dict b into a"""
+    if path is None:
+        path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge_dicts(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass  # same leaf value
+            else:
+                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a
+
+
 class BaseHandler(RequestHandler):
     """
         Basic Blueprint for a sqlalchemy model
@@ -109,6 +126,8 @@ class BaseHandler(RequestHandler):
 
         self.include = self.parse_columns(include_columns)
         self.include_many = self.parse_columns(include_columns_many)
+        self.include_all = merge_dicts(self.include or {},
+                                       self.include_many or {})
         self.exclude = self.parse_columns(exclude_columns)
 
         self.to_dict_options = {'execute_queries': not exclude_queries, 'execute_hybrids': not exclude_hybrids}
@@ -781,17 +800,18 @@ class BaseHandler(RequestHandler):
 
     def _get_include_columns(self, single):
         if not single and self.include_many is not None:
-            include = self.include_many
+            include_columns = self.include_many
         else:
-            include = self.include
+            include_columns = self.include
         requested_fields = self.get_query_argument('fields', False)
         if requested_fields:
             requested_fields = self.parse_columns(requested_fields)
-            if include is None:
-                include = requested_fields
+            if include_columns is None:
+                include_columns = requested_fields
             else:
-                include = self.combine_columns(requested_fields, include)
-        return include
+                include_columns = self.combine_columns(requested_fields,
+                                                       self.include_all)
+        return include_columns
 
     def _call_preprocessor(self, *args, **kwargs):
         """
