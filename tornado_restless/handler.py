@@ -331,7 +331,7 @@ class BaseHandler(RequestHandler):
                 self.set_status(201, "Patched")
 
                 # To Dict
-                return self.to_dict(instance)
+                return self.to_dict(instance, self._get_include_columns(True))
         except SQLAlchemyError as ex:
             logging.exception(ex)
             self.send_error(status_code=400, exc_info=sys.exc_info())
