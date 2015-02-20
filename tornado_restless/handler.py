@@ -79,6 +79,7 @@ class BaseHandler(RequestHandler):
                    exclude_hybrids,
                    include_columns,
                    include_columns_many,
+                   deferred_columns,
                    exclude_columns,
                    results_per_page,
                    max_results_per_page,
@@ -126,8 +127,11 @@ class BaseHandler(RequestHandler):
 
         self.include = self.parse_columns(include_columns)
         self.include_many = self.parse_columns(include_columns_many)
+        self.deferred = self.parse_columns(deferred_columns)
         self.include_all = merge_dicts(self.include or {},
                                        self.include_many or {})
+        self.include_all = merge_dicts(self.include_all,
+                                       self.deferred or {})
         self.exclude = self.parse_columns(exclude_columns)
 
         self.to_dict_options = {'execute_queries': not exclude_queries, 'execute_hybrids': not exclude_hybrids}
