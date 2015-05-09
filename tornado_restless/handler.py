@@ -7,22 +7,21 @@
      use the modification via create_api_blueprint(handler_class=...)
 """
 import inspect
-import logging
-import sys
 from json import dumps, loads
+import logging
 from math import ceil
+import sys
 from traceback import print_exception
 from urlparse import parse_qs
 
+from .convert import to_dict, build_query, parse_columns, combine_columns
+from .errors import IllegalArgumentError, MethodNotAllowedError, ProcessingException
+from .wrapper import SessionedModelWrapper
 from sqlalchemy import inspect as sqinspect
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound, UnmappedInstanceError, MultipleResultsFound
 from sqlalchemy.util import memoized_instancemethod, memoized_property
 from tornado.web import RequestHandler, HTTPError
-
-from .convert import to_dict, to_filter, parse_columns, combine_columns
-from .errors import IllegalArgumentError, MethodNotAllowedError, ProcessingException
-from .wrapper import SessionedModelWrapper
 
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
@@ -155,7 +154,7 @@ class BaseHandler(RequestHandler):
     def combine_columns(self, requested, include):
         return combine_columns(requested, include)
 
-    def get_filters(self):
+    def build_query(self, ignore_orders=False):
         """
             Returns a list of filters made by the query argument
 
@@ -167,9 +166,15 @@ class BaseHandler(RequestHandler):
         argument_filters = self.get_query_argument("filters", [])
 
         # Get all provided orders
-        argument_orders = self.get_query_argument("order_by", [])
+        if ignore_orders:
+            argument_orders = None
+        else:
+            argument_orders = self.get_query_argument("order_by", [])
 
-        return to_filter(self.model.model, argument_filters, argument_orders)
+        return build_query(self.microservice_session,
+                           self.model.model,
+                           argument_filters,
+                           argument_orders)
 
     def write_error(self, status_code, **kwargs):
         """
@@ -267,32 +272,33 @@ class BaseHandler(RequestHandler):
         # Get values
         values = self.get_argument_values()
 
-        # Filters
-        filters = self.get_filters()
+        # Query
+        query = self.build_query(ignore_orders=True)
 
-        # Limit
-        limit = self.get_query_argument("limit", None)
+        # # Call Preprocessor
+        # self._call_preprocessor(filters=filters, data=values)
 
-        # Call Preprocessor
-        self._call_preprocessor(filters=filters, data=values)
+        instances = query.all()
+        patched_count = 0
+
+        # If single is passed, no more than 1 record should be patched
+        if self.get_query_argument("single", False):
+            if len(instances) > 1:
+                raise Exception("Only 1 or no record can be pached")
 
         # Modify Instances
-        if self.get_query_argument("single", False):
-            instances = [self.model.one(filters=filters)]
-            for instance in instances:
-                for (key, value) in values.items():
-                    logging.debug("%s => %s" % (key, value))
-                    setattr(instance, key, value)
-            num = 1
-        else:
-            num = self.model.update(values, limit=limit, filters=filters)
+        for instance in instances:
+            for (key, value) in values.items():
+                logging.debug("%s => %s" % (key, value))
+                setattr(instance, key, value)
+            patched_count += 1
 
         # Commit
         self.model.session.commit()
 
         # Result
         self.set_status(201, "Patched")
-        return {'num_modified': num}
+        return {'num_modified': patched_count}
 
     def patch_single(self, instance_id):
         """
@@ -384,30 +390,32 @@ class BaseHandler(RequestHandler):
         # Flush
         self.model.session.flush()
 
-        # Filters
-        filters = self.get_filters()
+        # Query
+        query = self.build_query(ignore_orders=True)
 
-        # Limit
-        limit = self.get_query_argument("limit", None)
+        # # Call Preprocessor
+        # self._call_preprocessor(filters=filters, data=values)
 
-        # Call Preprocessor
-        self._call_preprocessor(filters=filters)
+        instances = query.all()
+        remove_count = 0
+
+        # If single is passed, no more than 1 record should be patched
+        if self.get_query_argument("single", False):
+            if len(instances) > 1:
+                raise Exception("Only 1 or no record can be deleted")
 
         # Modify Instances
-        if self.get_query_argument("single", False):
-            instance = self.model.one(filters=filters)
+        for instance in instances:
             self.model.session.delete(instance)
-            self.model.session.commit()
-            num = 1
-        else:
-            num = self.model.delete(limit=limit, filters=filters)
+            remove_count += 1
 
         # Commit
         self.model.session.commit()
 
         # Result
-        self.set_status(200, "Removed")
-        return {'num_removed': num}
+        self.set_status(202, "Removed")
+        return {'num_removed': remove_count}
+
 
     def delete_single(self, instance_id):
         """
@@ -769,38 +777,34 @@ class BaseHandler(RequestHandler):
         # Limit
         search_params['limit'] = self.get_query_argument("limit", search_params['results_per_page'] or None)
 
-        # Filters
-        filters = self.get_filters()
+        # Query
+        query = self.build_query()
 
         # Call Preprocessor
-        self._call_preprocessor(filters=filters, search_params=search_params)
+        # self._call_preprocessor(filters=filters, search_params=search_params)
 
         # determine columns to include
         include_columns = self._get_include_columns(search_params['single'])
 
         # Get Instances
         if search_params['single']:
-            instance = self.model.one(offset=search_params['offset'],
-                                      filters=filters,
-                                      include_columns=include_columns)
+            instance = query.offset(search_params['offset']).one()
             return self.to_dict(instance, include_columns)
         elif search_params['all']:
-            instances = self.model.all(offset=search_params['offset'],
-                                       filters=filters,
-                                       include_columns=include_columns)
+            instances = query.offset(search_params['offset']).all()
             return self.to_dict(instances, include_columns)
         else:
             # Num Results
-            num_results = self.model.count(filters=filters)
+            num_results = query.count()
             if search_params['results_per_page']:
-                total_pages = ceil(num_results / search_params['results_per_page'])
+                total_pages = ceil(float(num_results) / search_params['results_per_page'])
             else:
                 total_pages = 1
 
-            instances = self.model.all(offset=search_params['offset'],
-                                       limit=search_params['limit'],
-                                       filters=filters,
-                                       include_columns=include_columns)
+            instances = query.offset(search_params['offset'])\
+                             .limit(search_params['limit'])\
+                             .all()
+
             return {'num_results': num_results,
                     "total_pages": total_pages,
                     "page": page + 1,
