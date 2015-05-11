@@ -266,8 +266,8 @@ class QueryBuilder(object):
             if '__' in fname:
                 relation, fname = fname.split('__')
             # # get the other field to which to compare, if it exists
-            if filt.otherfield:
-                val = getattr(model, filt.otherfield)
+            if filt.get('otherfield'):
+                val = getattr(model, filt['otherfield'])
             # for the sake of brevity...
             create_op = QueryBuilder._create_operation
             return create_op(model, fname, filt['op'], val, relation)
