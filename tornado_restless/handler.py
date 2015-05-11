@@ -156,8 +156,9 @@ class BaseHandler(RequestHandler):
 
     def build_query(self, ignore_orders=False):
         """
-            Returns a list of filters made by the query argument
+            Builds a query using passed filters and order_by
 
+            :ignore_orders
             :query filters: list of filters
             :query order_by: list of orderings
         """
