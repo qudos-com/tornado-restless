@@ -171,7 +171,7 @@ class BaseHandler(RequestHandler):
         else:
             argument_orders = self.get_query_argument("order_by", [])
 
-        return build_query(self.microservice_session,
+        return build_query(self.model.session,
                            self.model.model,
                            argument_filters,
                            argument_orders)
