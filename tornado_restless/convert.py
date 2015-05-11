@@ -8,6 +8,7 @@ from datetime import datetime, date, time
 import inspect
 import itertools
 from uuid import UUID
+from decimal import Decimal
 
 from .errors import IllegalArgumentError, DictConvertionError
 from .helpers import get_related_association_proxy_model
@@ -503,6 +504,10 @@ def to_dict(instance,
     # A Geoalchemy element
     if isinstance(instance, (WKTElement, WKBElement)):
         return to_mapping(to_shape(instance))
+
+    # A Decimal
+    if isinstance(instance, Decimal):
+        return int(instance)
 
     # A UUID
     if isinstance(instance, UUID):
