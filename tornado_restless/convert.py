@@ -261,7 +261,7 @@ class QueryBuilder(object):
         # as normal.
         if not isinstance(filt, JunctionFilter):
             fname = filt['name']
-            val = filt['value']
+            val = filt.get('value') or filt.get('val')
             # get the relationship from the field name, if it exists
             relation = None
             if '__' in fname:
