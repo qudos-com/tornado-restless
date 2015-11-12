@@ -112,8 +112,11 @@ class BaseHandler(RequestHandler):
             self.request.method = self.request.headers['X-HTTP-Method-Override']
 
         super(BaseHandler, self).initialize()
-        self.model = SessionedModelWrapper(model, manager.session_maker(),
-                                           query_options)
+        self._model = None
+        self.model_cls = model
+        self.manager = manager
+        self.query_options = query_options
+
         self.pk_length = len(sqinspect(model).primary_key)
         self.methods = [method.lower() for method in methods]
         self.allow_patch_many = allow_patch_many
@@ -135,6 +138,14 @@ class BaseHandler(RequestHandler):
         self.exclude = self.parse_columns(exclude_columns)
 
         self.to_dict_options = {'execute_queries': not exclude_queries, 'execute_hybrids': not exclude_hybrids}
+
+    @property
+    def model(self):
+        if not self._model:
+            self._model = SessionedModelWrapper(self.model_cls,
+                                                self.manager.session_maker(),
+                                                self.query_options)
+        return self._model
 
     def prepare(self):
         """
