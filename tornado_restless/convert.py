@@ -171,11 +171,15 @@ def parse_columns(strings):
         :param strings: List of Column Names
         :return:
     """
-    columns = {}
+    # already parsed
+    if isinstance(strings, dict):
+        return strings
 
     # Strings
     if strings is None:
         return None
+
+    columns = {}
 
     # Parse
     for column in [column.split(".", 1) for column in strings]:
