@@ -110,14 +110,15 @@ class ApiManager(object):
 
         if collection_name is None:
             collection_name = model.__tablename__
-        if url_path is None:
-            url_path = "%s(?:/(.+))?/?" % collection_name
-        blueprint = URLSpec(
-            r"%s/%s$" % (url_prefix, url_path),
-            handler_class,
-            kwargs,
-            '%s%s' % (blueprint_prefix, collection_name))
+        url = self.get_url(url_prefix, url_path, collection_name)
+        blueprint = URLSpec(url, handler_class, kwargs,
+                            '%s%s' % (blueprint_prefix, collection_name))
         return blueprint
+
+    def get_url(self, prefix, path, collection_name):
+        if path is None:
+            path = "%s(?:/([^/]+))?/?" % collection_name
+        return r"%s/%s$" % (prefix, path)
 
     def create_api(self,
                    model,
