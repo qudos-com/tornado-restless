@@ -23,6 +23,7 @@ from tornado.web import RequestHandler, HTTPError
 from .convert import to_dict, to_filter, parse_columns, combine_columns
 from .errors import IllegalArgumentError, MethodNotAllowedError, ProcessingException
 from .wrapper import SessionedModelWrapper
+from .helpers import get_related_model, get_or_create
 
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
@@ -317,7 +318,7 @@ class BaseHandler(RequestHandler):
         """
         try:
             with self.model.session.begin_nested():
-                values = self.get_argument_values()
+                values, values_relations = self.get_argument_values(True)
 
                 # Call Preprocessor
                 self._call_preprocessor(instance_id=instance_id, data=values)
@@ -329,6 +330,10 @@ class BaseHandler(RequestHandler):
                 for (key, value) in values.items():
                     self.logger.debug(u"%r.%s => %s" % (instance, key, value))
                     setattr(instance, key, value)
+
+                # Set relationship values
+                for key, value in values_relations.items():
+                    self.patch_relation(instance, key, value)
 
                 # Flush
                 try:
@@ -353,6 +358,38 @@ class BaseHandler(RequestHandler):
         finally:
             # Commit
             self.model.session.commit()
+
+    def patch_relation(self, instance, field, values):
+        """Sets the value of the relation specified by `relationname` on each
+        instance specified by `query` to have the new or existing related
+        models specified by `toset`.
+
+        This function does not commit the changes made to the database. The
+        calling function has that responsibility.
+
+        `query` is a SQLAlchemy query instance that evaluates to all instances
+        of the model specified in the constructor of this class that should be
+        updated.
+
+        `relationname` is the name of a one-to-many relationship which exists
+        on each model specified in `query`.
+
+        `toset` is either a dictionary or a list of dictionaries, each
+        representing the attributes of an existing or new related model to
+        set. If a dictionary contains the key ``'id'``, that instance of the
+        related model will be added. Otherwise, the
+        :func:`helpers.get_or_create` method will be used to get or create a
+        model to set.
+        """
+        submodel = get_related_model(self.model.model, field)
+        if not submodel:
+            raise IllegalArgumentError("Column '%s' not defined for model %s"
+                                       % (field, self.model.model))
+        if isinstance(values, list):
+            value = [get_or_create(self.model.session, submodel, d) for d in values]
+        else:
+            value = get_or_create(self.model.session, submodel, values)
+        setattr(instance, field, value)
 
     def delete(self, instance_id=None, **kwargs):
         """
@@ -639,7 +676,7 @@ class BaseHandler(RequestHandler):
             else:
                 raise
 
-    def get_argument_values(self):
+    def get_argument_values(self, include_relations=False):
         """
             Get all values provided via arguments
 
@@ -692,6 +729,8 @@ class BaseHandler(RequestHandler):
         #    if not column in self.model.column_names:
         #        raise IllegalArgumentError("Column '%s' not defined for model %s" % (column, self.model.model))
 
+        if include_relations:
+            return values, values_relations
         return values
 
     def get(self, instance_id=None, **kwargs):
