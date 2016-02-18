@@ -541,13 +541,17 @@ class BaseHandler(RequestHandler):
         """
 
         try:
-            values = self.get_argument_values()
+            values, values_relations = self.get_argument_values(True)
 
             # Call Preprocessor
             self._call_preprocessor(data=values)
 
             # Create Instance
             instance = self.model(**values)
+
+            # Set relationship values
+            for key, value in values_relations.items():
+                self.patch_relation(instance, key, value)
 
             # Call Postprocessor
             self._call_postprocessor(instance=instance)
