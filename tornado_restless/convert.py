@@ -12,6 +12,7 @@ import itertools
 from sqlalchemy.orm import object_mapper
 from sqlalchemy.orm.exc import UnmappedInstanceError
 from sqlalchemy.orm.query import Query
+from sqlalchemy.orm.relationships import RelationshipProperty
 
 from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKTElement, WKBElement
@@ -77,7 +78,8 @@ def to_filter(instance,
         if "__" in argument_filter["name"] or "." in argument_filter["name"]:
             relation, _, name = argument_filter["name"].replace("__", ".").partition(".")
             left = getattr(instance, relation)
-            op = "has"
+            if isinstance(left.prop, RelationshipProperty):
+                op = "any"if left.prop.uselist else "has"
             argument_filter["name"] = name
             argument_filter["op"] = "eq"
             right = to_filter(instance=left.property.mapper.class_, filters=[argument_filter])
@@ -122,12 +124,16 @@ def to_filter(instance,
             alchemy_filters.append(left.in_(right))
         elif op in ["not_in"]:
             alchemy_filters.append(left.notin_(right))
-        elif op in ["has"] and isinstance(right, list):
-            alchemy_filters.append(left.any(*right))
         elif op in ["has"]:
-            alchemy_filters.append(left.has(right))
+            if isinstance(right, list):
+                alchemy_filters.append(left.has(*right))
+            else:
+                alchemy_filters.append(left.has(right))
         elif op in ["any"]:
-            alchemy_filters.append(left.any(right))
+            if isinstance(right, list):
+                alchemy_filters.append(left.any(*right))
+            else:
+                alchemy_filters.append(left.any(right))
 
         # Additional Operators
         elif op in ["between"]:
