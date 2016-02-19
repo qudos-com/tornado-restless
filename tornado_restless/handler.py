@@ -847,7 +847,9 @@ class BaseHandler(RequestHandler):
             # Num Results
             num_results = self.model.count(filters=filters)
             if search_params['results_per_page']:
-                total_pages = ceil(num_results / search_params['results_per_page'])
+                total_pages = max(int(ceil(num_results /
+                                           search_params['results_per_page'])),
+                                  1)
             else:
                 total_pages = 1
 
