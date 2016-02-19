@@ -1,33 +1,28 @@
-#!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
-"""
-    
-"""
+import os
 from datetime import datetime
 from json import loads
-import logging
 from threading import Thread
+from unittest import TestCase
 from urlparse import urljoin
-import os
 
-from flask import Flask
 import requests
-from sqlalchemy import create_engine, schema, event, Column, Integer, String, ForeignKey, DateTime, func, Float
+import tornado.ioloop
+import tornado.web
+from flask import Flask
+from flask.ext.restless import APIManager as FlaskRestlessManager
+from sqlalchemy import (Column, create_engine, DateTime, Float, ForeignKey,
+                        func, Integer, schema, String)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import sessionmaker, relationship, scoped_session, backref
-import tornado.web
-import tornado.ioloop
-from flask.ext.restless import APIManager as FlaskRestlessManager
-
+from sqlalchemy.orm import backref, relationship, scoped_session, sessionmaker
 from tornado_restless import ApiManager as TornadoRestlessManager
-
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '21.08.13'
 
 
-class TestBase(object):
+class TestBase(TestCase):
     """
         Base class for all tests
 
@@ -41,7 +36,6 @@ class TestBase(object):
     }
 
     def setUp(self):
-
         self.setUpAlchemy()
         self.setUpModels()
         self.setUpFlask()
@@ -88,10 +82,7 @@ class TestBase(object):
         class TornadoThread(Thread):
 
             def run(self):
-                try:
-                    tornado.ioloop.IOLoop.instance().start()
-                finally:
-                    del self._target
+                tornado.ioloop.IOLoop.instance().start()
 
         self.threads = {'tornado': TornadoThread(target=self),
                         'flask': self.flask.test_client()}
@@ -198,7 +189,7 @@ class TestBase(object):
 
         self.models = {'Person': (Person, "all"), 'Computer': (Computer, "all"), 'City': (City, "read")}
 
-        frankfurt = City(_plz=60400 ,name="Frankfurt")
+        frankfurt = City(_plz=60400, name="Frankfurt")
         berlin = City(_plz=10800, name="Berlin")
 
         self.citites = [frankfurt, berlin]
@@ -261,38 +252,22 @@ class TestBase(object):
         tornado.ioloop.IOLoop.instance().add_callback(stop)
         self.threads['tornado'].join()
 
-    def subsetOf(self, a, b):
+    def assertSubsetOf(self, a, b):
         """
             Test wether a is an subset of b (or b an superset of a)
         """
 
         if type(a) != type(b):
-            logging.error("Type not equal of a,b")
-            return False
+            raise AssertionError("Type not equal of %s, %s" % (a, b))
 
-        if isinstance(a, dict) or hasattr(a, "items"):
+        elif isinstance(a, dict) or hasattr(a, "items"):
             for (key, value) in a.items():
-                if not self.subsetOf(value, b[key]):
-                    return False
-            else:
-                return True
+                self.assertSubsetOf(value, b[key])
 
-        if isinstance(a, list) or hasattr(a, "__iter__"):
+        elif isinstance(a, list) or hasattr(a, "__iter__"):
             for element in a:
                 if element not in b:
-                    return False
-            else:
-                return True
+                    raise AssertionError("%r not in %r" % (element, b))
 
-        return a == b
-
-
-if __name__ == "__main__":
-
-    logging.basicConfig(level=logging.DEBUG)
-    base = TestBase()
-    base.setUp()
-    try:
-        base.threads["tornado"].join()
-    except KeyboardInterrupt:
-        base.tearDown()
+        else:
+            self.assertEqual(a, b)

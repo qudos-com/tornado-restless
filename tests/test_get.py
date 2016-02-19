@@ -1,7 +1,7 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 """
-    
+
 """
 import json
 import logging
@@ -27,7 +27,7 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
     def test_likefilter(self):
         """
@@ -43,7 +43,7 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
         assert len(flask_data['objects']) == len(tornado_data['objects']) == 2
         assert flask_data['num_results'] == tornado_data['num_results'] == 2
@@ -62,14 +62,14 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
         flask_ages = [o['age'] for o in flask_data['objects']]
         tornado_ages = [o['age'] for o in tornado_data['objects']]
 
-        assert int(flask_ages[0]) == int(tornado_ages[0]) == 10
-        assert int(flask_ages[1]) == int(tornado_ages[1]) == 14
-        assert int(flask_ages[2]) == int(tornado_ages[2]) == 20
+        assert int(round(flask_ages[0])) == int(round(tornado_ages[0])) == 10
+        assert int(round(flask_ages[1])) == int(round(tornado_ages[1])) == 14
+        assert int(round(flask_ages[2])) == int(round(tornado_ages[2])) == 20
 
     def test_descsorting(self):
         """
@@ -85,14 +85,14 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
         flask_ages = [o['age'] for o in flask_data['objects']]
         tornado_ages = [o['age'] for o in tornado_data['objects']]
 
-        assert int(flask_ages[-1]) == int(tornado_ages[-1]) == 10
-        assert int(flask_ages[-2]) == int(tornado_ages[-2]) == 14
-        assert int(flask_ages[-3]) == int(tornado_ages[-3]) == 20
+        assert int(round(flask_ages[-1])) == int(round(tornado_ages[-1])) == 10
+        assert int(round(flask_ages[-2])) == int(round(tornado_ages[-2])) == 14
+        assert int(round(flask_ages[-3])) == int(round(tornado_ages[-3])) == 20
 
     def test_single(self):
         """
@@ -105,7 +105,7 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
     def test_float(self):
         """
@@ -118,7 +118,7 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
 
         flask_computer_cpu = flask_data['objects'][0]['cpu']
         tornado_computer_cpu = tornado_data['objects'][0]['cpu']
@@ -139,7 +139,7 @@ class TestGet(TestBase):
         logging.debug(flask_data)
         logging.debug(tornado_data)
 
-        assert self.subsetOf(flask_data, tornado_data)
+        self.assertSubsetOf(flask_data, tornado_data)
         assert len(flask_data['objects']) == 2 == len(tornado_data['objects'])
 
     def test_nothing(self):
@@ -147,7 +147,7 @@ class TestGet(TestBase):
             Test for some missing data
         """
 
-        self.curl_tornado('/api/persons/1337', assert_for=400)
+        self.curl_tornado('/api/persons/1337', assert_for=404)
 
     def test_relation(self):
         params = {
