@@ -1,8 +1,5 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
-"""
-
-"""
 import json
 import logging
 from .base import TestBase
@@ -167,3 +164,9 @@ class TestGet(TestBase):
         }
         tornado_data = self.curl_tornado('/api/persons', params=params)
         assert len(tornado_data['objects']) == 0
+
+        params = {
+            'q': json.dumps({'filters': [{'name': 'computers.ram', 'op': 'eq', 'val': 8}]})
+        }
+        tornado_data = self.curl_tornado('/api/persons', params=params)
+        assert len(tornado_data['objects']) == 1
